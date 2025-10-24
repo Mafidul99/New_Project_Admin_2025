@@ -1,6 +1,10 @@
+
+
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+
 class ApiClient {
   constructor() {
-    this.baseURL = 'http://localhost:5000/api';
+    this.baseURL = API_BASE_URL;
     this.retryCount = 0;
     this.maxRetries = 3;
     this.isRefreshing = false;
