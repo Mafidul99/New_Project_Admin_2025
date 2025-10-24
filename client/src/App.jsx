@@ -1,63 +1,66 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import Loans from './components/Loans';
-import ApplyLoan from './components/ApplyLoan';
-import Payments from './components/Payments';
-import AdminPanel from './components/AdminPanel';
-import './App.css';
+import ProtectedRoute from './components/ProtectedRoute';
+import LoadingSpinner from './components/LoadingSpinner';
+import Dashboard from './pages/Admin/Dashboard';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 
-function ProtectedRoute({ children, adminOnly = false }) {
+const AppContent = () => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
-  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" />;
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-  return children;
-}
+  return (
+    <Routes>
+      <Route 
+        path="/login" 
+        element={!user ? <Login /> : <Navigate to="/dashboard" replace />} 
+      />
+      <Route 
+        path="/register" 
+        element={!user ? <Register /> : <Navigate to="/dashboard" replace />} 
+      />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      
+      {/* Admin route example */}
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+              <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Admin Panel</h1>
+                <p className="text-gray-600">Welcome to the admin dashboard!</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+    </Routes>
+  );
+};
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="App">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/loans" element={
-              <ProtectedRoute>
-                <Loans />
-              </ProtectedRoute>
-            } />
-            <Route path="/apply-loan" element={
-              <ProtectedRoute>
-                <ApplyLoan />
-              </ProtectedRoute>
-            } />
-            <Route path="/payments" element={
-              <ProtectedRoute>
-                <Payments />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute adminOnly={true}>
-                <AdminPanel />
-              </ProtectedRoute>
-            } />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-          </Routes>
+          <AppContent />
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
